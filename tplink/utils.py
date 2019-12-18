@@ -4,10 +4,13 @@ import socket
 
 
 class Cache(object):
-    
+
     def __init__(self):
         self.data = {}
-    
+
+    def Clear(self):
+        self.data.clear()
+
     def Get(self, key, timeout=5):
         if key not in self.data:
             return None
@@ -16,7 +19,7 @@ class Cache(object):
             del self.data[key]
             return None
         return data
-    
+
     def Insert(self, key, data):
         self.data[key] = (time.time(), data)
 
