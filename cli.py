@@ -30,12 +30,22 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser('cli')
     parser.add_argument('--device', '-d', action='append', dest='devices',
         help='List of known devices. If provided discovery is skipped.')
-    
+
     commands = parser.add_subparsers(dest='command')
     status = commands.add_parser('status',
         help='Get devices current status')
 
+    poll = commands.add_parser('poll',
+        help='Poll the configured devices for realtime emeter changes')
+    poll.add_argument('--config', '-c', required=True,
+        help='Path to the config file')
+    poll.add_argument('--interval', '-i', default=10,
+        help='Poll interval between checking for changes (in seconds).')
+    poll.add_argument('--log-file', '-l', dest='logfile', required=False,
+        help='Path to the log file.')
+    poll.add_argument('--cron', action='store_true', default=False,
+        help='Flag indicating that the process is running as a cron job.')
+
     args = parser.parse_args()
     if not Main(args):
         sys.exit(1)
-    
