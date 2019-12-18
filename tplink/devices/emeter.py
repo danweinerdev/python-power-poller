@@ -11,11 +11,11 @@ class EmeterHandler(object):
         self.device = device
         self.emeterType = device.GetEmeterType()
         self.__cache = Cache()
-    
+
     def ClearDeviceStats(self):
         return self.Send(
             self.QueryHelper(self.emeterType, 'erase_emeter_stat', None))
-    
+
     def GetAmps(self):
         value = self.GetRealtime()
         if value is None:
@@ -47,6 +47,8 @@ class EmeterHandler(object):
                 total += float(day['energy_wh'])
             else:
                 return float(-1)
+        if total <= 0:
+            return 0.0
         return float(total / len(data))
 
     def GetDailyUsage(self, month=None, year=None):
@@ -59,7 +61,7 @@ class EmeterHandler(object):
 
         data = response[self.emeterType]['get_daystat']['day_list']
         return data
-    
+
     def GetMonthlyAverage(self):
         total = 0.0
         data = self.GetDailyUsage()
@@ -70,6 +72,8 @@ class EmeterHandler(object):
                 total += float(month['energy_wh'])
             else:
                 return float(-1)
+        if total <= 0:
+            return 0.0
         return float(total / len(data))
 
     def GetMonthlyUsage(self, year=None):
@@ -81,10 +85,10 @@ class EmeterHandler(object):
 
         data = response[self.emeterType]['get_monthstat']['month_list']
         return data
-    
+
     def GetRealtime(self, key=None):
         data = self.__cache.Get(self.emeterType)
-            
+
         if data is None:
             data = self.Send(self.QueryHelper(self.emeterType, 'get_realtime'))
 
@@ -94,7 +98,7 @@ class EmeterHandler(object):
         if key is not None:
             return data[self.emeterType]['get_realtime'].get(key)
         return data[self.emeterType]['get_realtime']
-    
+
     def GetUsageMonth(self):
         data = self.GetDailyUsage()
         month = datetime.now().month
@@ -108,7 +112,7 @@ class EmeterHandler(object):
                 else:
                     return float(-1)
         return float(-1)
-    
+
     def GetUsageToday(self):
         data = self.GetDailyUsage()
         today = datetime.now().day
@@ -121,7 +125,7 @@ class EmeterHandler(object):
                 else:
                     return float(-1)
         return float(-1)
-    
+
     def GetVoltage(self):
         value = self.GetRealtime()
         if value is None:
@@ -129,9 +133,9 @@ class EmeterHandler(object):
         if 'voltage' in value:
             return float(value['voltage'])
         return 0
-    
+
     def QueryHelper(self, *args):
         return self.device.QueryHelper(*args)
-    
+
     def Send(self, message):
         return self.device.Send(message)
