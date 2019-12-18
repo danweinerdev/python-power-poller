@@ -1,1 +1,1 @@
-from .utils import GetDeviceType
+from .utils import GetDeviceType, LoadDevices
