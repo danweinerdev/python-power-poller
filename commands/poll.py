@@ -40,11 +40,12 @@ def ConvertBoolean(value):
 
 
 def ConvertValue(value, hint=None):
-    value = value.strip()
+    if isinstance(value, str):
+        value = value.strip()
     try:
         if hint is not None:
             if hint == 'int':
-                if '.' in value:
+                if isinstance(value, str) and '.' in value:
                     return int(float(value))
                 return int(value)
             if hint == 'float':
@@ -54,7 +55,7 @@ def ConvertValue(value, hint=None):
             raise ConversionFailure
         else:
             v = float(value)
-            if '.' in value:
+            if isinstance(value, str) and '.' in value:
                 return v
             return int(v)
     except (TypeError, ValueError):
@@ -248,7 +249,7 @@ def ProcessDevices(config, influx, addresses, devices):
                 'measurement': key.replace('.', '_'),
                 'tags': addresses[device.address]['tags'],
                 'time': timeStamp,
-                'fields': {'value': value}})
+                'fields': {'value': ConvertValue(value, hint=fields[key])}})
 
     start = time.time()
     influx.write_points(points, time_precision='ms')
