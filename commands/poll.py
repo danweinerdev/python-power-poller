@@ -232,7 +232,7 @@ def ProcessDevices(config, influx, addresses, devices):
             continue
 
         emeter = device.GetEmeter()
-        result = emeter.GetRealtime()
+        result = emeter.GetRealtime(cache=False)
         if 'err_code' not in result or result['err_code'] != 0:
             logger.error("Failed to load device '{}' emeter data",
                 device.GetAlias())

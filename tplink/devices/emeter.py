@@ -86,15 +86,14 @@ class EmeterHandler(object):
         data = response[self.emeterType]['get_monthstat']['month_list']
         return data
 
-    def GetRealtime(self, key=None):
-        data = self.__cache.Get(self.emeterType)
-
+    def GetRealtime(self, key=None, cache=True):
+        data = None
+        if cache:
+            data = self.__cache.Get(self.emeterType)
         if data is None:
             data = self.Send(self.QueryHelper(self.emeterType, 'get_realtime'))
-
         if data is not None:
             self.__cache.Insert(self.emeterType, data)
-
         if key is not None:
             return data[self.emeterType]['get_realtime'].get(key)
         return data[self.emeterType]['get_realtime']
