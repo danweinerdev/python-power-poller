@@ -11,6 +11,7 @@ import time
 import threading
 from influxdb import InfluxDBClient
 from tplink.discover import LoadDevices
+from tplink.exceptions import ConnectionError
 from tplink.utils import IsValidIPv4
 
 
@@ -203,8 +204,11 @@ def Poll(devices, args):
 
     try:
         while True:
-            if not ProcessDevices(config, influx, addresses, devices):
-                return False
+            try:
+                if not ProcessDevices(config, influx, addresses, devices):
+                    return False
+            except ConnectionError as e:
+                logger.error("{}: [{}] {}".format(e.message, e.errno, e.errstr))
             if event.is_set():
                 break
             if not args.interval:

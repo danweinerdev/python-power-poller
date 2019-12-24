@@ -16,7 +16,7 @@ class ConnectionError(DeviceError):
 
     def __init__(self, err, *args, **kwargs):
         self.err = err
-        self.errstr = os.strerror(err)
+        self.errstr = os.strerror(err) if err else ''
         super(ConnectionError, self).__init__(*args, **kwargs)
 
 
