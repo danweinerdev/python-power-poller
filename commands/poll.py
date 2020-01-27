@@ -1,6 +1,7 @@
 from configparser import ConfigParser
 from datetime import datetime
 import errno
+import fcntl
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
@@ -68,12 +69,37 @@ def ConvertValue(value, hint=None):
             return ConvertBoolean(value)
 
 
+class Closer(object):
+
+    def __init__(self, inner):
+        self.callback = inner
+        self.fds = list()
+
+    def __call__(self, *args, **kwargs):
+        try:
+            return self.callback(self, *args, **kwargs)
+        finally:
+            for [fd, desc] in self.fds:
+                logger.info("Closing '{}'".format(desc))
+                CloseDescriptor(fd)
+
+    def Add(self, fd, description):
+        self.fds.append((fd, description))
+
+
+def CloseDescriptor(fd):
+    try:
+        if hasattr(fd, 'close'):
+            fd.close()
+        else:
+            os.close(fd)
+    except (IOError, OSError):
+        pass
+
+
 def DropDescriptors():
     for fd in range(1, 3):
-        try:
-            os.close(fd)
-        except (IOError, OSError):
-            pass
+        CloseDescriptor(fd)
 
 
 def LoadConfiguration(configFile):
@@ -152,16 +178,42 @@ def LoadConfiguration(configFile):
     return config
 
 
-def Poll(devices, args):
-    event = threading.Event()
+def SetNonblocking(fd):
+    fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+
+
+def Notify(sock):
+    try:
+        os.write(sock, b'.')
+    except (IOError, OSError):
+        return False
+    return True
+
+
+@Closer
+def Poll(closer, devices, args):
+    shutdown = threading.Event()
     interval = (args.interval > 0)
     SetupLogging(args)
+
+    try:
+        [rd, wd] = os.pipe()
+        SetNonblocking(rd)
+        SetNonblocking(wd)
+    except (IOError, OSError) as e:
+        logger.error('Failed to initialize timeout pipe')
+        return False
+
+    closer.Add(rd, 'read notifier')
+    closer.Add(wd, 'write notifier')
 
     if interval:
         def ShutdownHandler(sig, sigframe):
             logger.info('Signal received: %d', sig)
             if sig in [signal.SIGINT, signal.SIGTERM]:
-                event.set()
+                shutdown.set()
+                Notify(wd)
 
         signal.signal(signal.SIGINT, ShutdownHandler)
         signal.signal(signal.SIGTERM, ShutdownHandler)
@@ -175,7 +227,7 @@ def Poll(devices, args):
     try:
         config = LoadConfiguration(args.config)
     except ConfigError as e:
-        print('Error: {}'.format(e.message))
+        logger.error('Error: {}'.format(e.message))
         return False
 
     if len(config['devices']) == 0:
@@ -188,6 +240,7 @@ def Poll(devices, args):
         ssl=config['influx']['ssl'],
         verify_ssl=config['influx']['verify'],
         database=config['influx']['database'])
+    closer.Add(influx, 'Influx Connection')
 
     logger.info('Successfully connected to InfluxDB: %s://%s:%d/%s',
         'https' if config['influx']['ssl'] else 'http',
@@ -199,28 +252,30 @@ def Poll(devices, args):
     for n, device in config['devices'].items():
         addresses[device['address']] = device
 
-    print('addresses={}'.format(addresses))
-    devices = LoadDevices(addresses.keys())
-
     try:
-        while True:
-            try:
-                if not ProcessDevices(config, influx, addresses, devices):
-                    return False
-            except ConnectionError as e:
-                logger.error("{}: [{}] {}".format(e.message, e.errno, e.errstr))
-            if event.is_set():
-                break
-            if not args.interval:
-                break
+        devices = LoadDevices(addresses.keys())
+    except ConnectionError as e:
+        logger.error(e.message)
+        return False
 
-            # TODO Update this sleep to a select-notify
-            time.sleep(float(args.interval))
-    finally:
+    while True:
+        if shutdown.is_set():
+            break
+
         try:
-            influx.close()
-        except:
-            pass
+            if not ProcessDevices(config, influx, addresses, devices):
+                return False
+        except ConnectionError as e:
+            logger.error("{}: [{}] {}".format(e.message, e.errno, e.errstr))
+
+        if not args.interval:
+            break
+
+        if Select(rd, [], args.interval):
+            try:
+                os.read(rd, 1)
+            except (IOError, OSError):
+                pass
 
     return True
 
@@ -264,9 +319,11 @@ def ProcessDevices(config, influx, addresses, devices):
 
     return (not failure)
 
+
 def TimeStamp(now=None):
     now = now or datetime.utcnow()
     return now.strftime('%Y-%m-%dT%H:%M:%SZ')
+
 
 def Select(rds, wrts, timeout):
     if not isinstance(rds, list):
@@ -275,13 +332,21 @@ def Select(rds, wrts, timeout):
         wrts = [wrts]
 
     try:
-        res = select.select(rds, wrts, [], timeout)
+        res = select.select(rds, wrts, [], float(timeout))
     except select.error as e:
-        pass
+        logger.error('Select error: {}'.format(e))
+        return False
     except os.error as e:
-        pass
+        logger.error('OSError: [{}] {}'.format(e.errno, os.strerror(e.errno)))
+        return False
     except KeyboardInterrupt:
-        pass
+        return False
+
+    if len(res[0]) > 0:
+        return True
+
+    return False
+
 
 def SetupLogging(args):
     if args.logfile is not None:
