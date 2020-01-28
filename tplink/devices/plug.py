@@ -6,24 +6,27 @@ class Plug(Device):
 
     def __init__(self, *args, **kwargs):
         super(Plug, self).__init__(type=DeviceType.PLUG, *args, **kwargs)
-    
+
     def __repr__(self):
-        return '<Plug: {}>'.format(self.address)
-    
+        return '<{}: {}>'.format(self.GetType(), self.address)
+
     def GetEmeterType(self):
         if not self.HasEmeter():
             raise DeviceError('Device does not support the emeter')
         return 'emeter'
-    
+
+    def GetType(self):
+        return 'Plug'
+
     def HasEmeter(self):
         return 'ENE' in self.GetFeatures()
 
     def IsOff(self):
         return not self.IsOn()
-    
+
     def IsOn(self):
         return bool(self.GetSysInfo('relay_state'))
-    
+
     def IsLedOff(self):
         return not self.IsLedOn()
 

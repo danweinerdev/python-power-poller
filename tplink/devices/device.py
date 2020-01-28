@@ -192,9 +192,10 @@ class Device(object):
                 buffer += chunk
                 if (length > 0 and len(buffer) >= length + 4) or not chunk:
                     break
-        except socket.error as e:
-            raise ConnectionError(e.errno, 'Error connecting to bulb: {}:{}'.format(
-                self.address, self.port))
+        except (socket.error, OSError) as e:
+            raise ConnectionError(e.errno,
+                "Error connecting to '{}' ({}): [{}] {}".format(
+                    self.GetType(), self.address, e.errno, os.strerror(e.errno)))
         finally:
             try:
                 sock.close()

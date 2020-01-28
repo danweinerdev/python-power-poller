@@ -266,7 +266,7 @@ def Poll(closer, devices, args):
             if not ProcessDevices(config, influx, addresses, devices):
                 return False
         except ConnectionError as e:
-            logger.error("{}: [{}] {}".format(e.message, e.errno, e.errstr))
+            logger.error("{}: [{}] {}".format(e.message, e.err, e.errstr))
 
         if not args.interval:
             break
