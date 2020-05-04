@@ -15,7 +15,7 @@ class ConnectionError(DeviceError):
     message = 'Failed to connect to target device'
 
     def __init__(self, err, *args, **kwargs):
-        self.err = err
+        self.err = err or -1
         self.errstr = os.strerror(err) if err else ''
         super(ConnectionError, self).__init__(*args, **kwargs)
 
