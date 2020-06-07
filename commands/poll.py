@@ -252,10 +252,15 @@ def Poll(closer, devices, args):
     for n, device in config['devices'].items():
         addresses[device['address']] = device
 
+    errors = 0
     try:
         devices = LoadDevices(addresses.keys())
     except ConnectionError as e:
         logger.error(e.message)
+        errors += 1
+
+    if errors == len(addresses):
+        print('Failed to load to any of the configured addresses')
         return False
 
     while True:
