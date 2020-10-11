@@ -1,51 +1,42 @@
 #!/usr/bin/env python3
 
-import argparse
+import os
 import sys
+
+pkgPath = os.path.realpath(os.path.join(__file__, os.pardir, os.pardir))
+if os.path.exists(os.path.join(pkgPath, 'monitor-lib')):
+    sys.path.insert(0, os.path.join(pkgPath, 'monitor-lib'))
+
 from commands import Interactive, Poll, Status
-from tplink.discover import LoadDevices
-from tplink.utils import IsValidIPv4
+from monitor.lib import Execute
 
 
-def Main(args):
-    for address in args.devices or []:
-        if not IsValidIPv4(address):
-            print("Error: Invalid IPv4 address: {}".format(address))
-            return False
+def ConfigureParams(parser):
+    """
+    Add the default options for any command on this tool.
 
-    devices = LoadDevices(args.devices)
-    if args.devices and len(devices) == 0:
-        print('Error: unable to load any devices')
-        return False
+    :param parser: Command sub-parser
+    :return: Updated parser object.
+    """
+    parser.add_argument('--device', '-d', action='append', dest='devices',
+        help='List of known devices. If provided discovery is skipped.')
+    return parser
 
-    if args.command == 'status':
-        return Status(devices, args)
-    if args.command == 'poll':
-        return Poll(devices, args)
 
-    return Interactive(devices, args)
+def Setup(args):
+    """
+    Setup the argument parsers for the extra sub-commands for the CLI tool.
+    This will configure the given callbacks and setup for bypassing the normal
+    poll mode and triggering secondary callbacks.
+
+    :param args: Callback registration tool.
+    :return: None
+    """
+    ConfigureParams(args.Register('status', Status,
+        help='Status command for polling the state of the configured devices'))
+    # ConfigureParams(args.Register('interactive', Interactive,
+    #    help='Run the interactive mode for the CLI tool.'))
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('cli')
-    parser.add_argument('--device', '-d', action='append', dest='devices',
-        help='List of known devices. If provided discovery is skipped.')
-
-    commands = parser.add_subparsers(dest='command')
-    status = commands.add_parser('status',
-        help='Get devices current status')
-
-    poll = commands.add_parser('poll',
-        help='Poll the configured devices for realtime emeter changes')
-    poll.add_argument('--config', '-c', required=True,
-        help='Path to the config file')
-    poll.add_argument('--interval', '-i', default=10,
-        help='Poll interval between checking for changes (in seconds).')
-    poll.add_argument('--log-file', '-l', dest='logfile', required=False,
-        help='Path to the log file.')
-    poll.add_argument('--cron', action='store_true', default=False,
-        help='Flag indicating that the process is running as a cron job.')
-
-    args = parser.parse_args()
-    if not Main(args):
-        sys.exit(1)
+    Execute(Poll, 'devices', command='run', commands=Setup)
