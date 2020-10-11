@@ -1,3 +1,8 @@
+from monitor.lib import ConfigError
+from tplink.discover import LoadDevice
+from tplink.utils import IsValidIPv4
+
+
 def PrettyDuration(seconds, values=2):
     table = [('Weeks', 604800), ('Days', 86400), ('Hours', 3600),
              ('Minutes', 60), ('Seconds', 0)]
@@ -38,7 +43,35 @@ def SignalStrength(value):
         return 'Weak'
     return 'N/A'
 
-def Status(devices, args):
+
+def Status(config, args):
+    try:
+        config.Load()
+    except ConfigError as e:
+        print('Failed to load config: {}'.format(e))
+        return False
+
+    devices = []
+    for [name, cfg] in config.GetRoot().items():
+        device = LoadDevice(cfg['address'])
+        if device is None:
+            print('Failed to load device: {}'.format(name))
+            continue
+        devices.append(device)
+    if args.devices:
+        for address in args.devices:
+            if not IsValidIPv4(address):
+                print('Invalid IPv4 Address: {}'.format(address))
+                continue
+            device = LoadDevice(address)
+            if device is None:
+                print('Failed to load device: {}'.format(address))
+                continue
+            devices.append(device)
+    if not devices:
+        print('Failed to load any devices')
+        return False
+
     for device in devices:
         print('-' * 30)
         print('Device Information')
