@@ -7,6 +7,10 @@ pkgPath = os.path.realpath(os.path.join(__file__, os.pardir, os.pardir))
 if os.path.exists(os.path.join(pkgPath, 'monitor-lib')):
     sys.path.insert(0, os.path.join(pkgPath, 'monitor-lib'))
 
+rootPath = os.path.realpath(os.path.join(__file__, os.pardir))
+if os.path.exists(os.path.join(rootPath, 'commands')):
+    sys.path.insert(0, rootPath)
+
 from commands import Interactive, Poll, Status
 from monitor.lib import Execute
 
