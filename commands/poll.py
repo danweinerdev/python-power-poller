@@ -25,7 +25,13 @@ def ProcessDevice(pipeline, name, config, logger=None):
         return False
 
     emeter = device.GetEmeter()
-    result = emeter.GetRealtime(cache=False)
+    try:
+        result = emeter.GetRealtime(cache=False)
+    except ConnectionError:
+        if logger:
+            logger.warning('Failed to get realtime data for: {}', address)
+        return True
+
     if 'err_code' not in result or result['err_code'] != 0:
         if logger:
             logger.error("Failed to load device '{}' emeter data",
@@ -48,6 +54,6 @@ def ProcessDevice(pipeline, name, config, logger=None):
 def Poll(config, logger, pipeline):
     success = True
     for device, cfg in config.items():
-        if ProcessDevice(pipeline, device, cfg, logger=logger):
+        if not ProcessDevice(pipeline, device, cfg, logger=logger):
             success = False
-    return Result.CANCEL if success else Result.FAILURE
+    return Result.SUCCESS if success else Result.FAILURE
