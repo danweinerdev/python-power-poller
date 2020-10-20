@@ -1,5 +1,6 @@
 from monitor.lib import ConversionFailure, Metric, Result
 from tplink.discover import LoadDevice
+from tplink.exceptions import ConnectionError
 from tplink.utils import IsValidIPv4
 
 
@@ -10,7 +11,13 @@ def ProcessDevice(pipeline, name, config, logger=None):
             logger.error('Invalid device configuration: {}', name)
         return False
 
-    device = LoadDevice(address)
+    try:
+        device = LoadDevice(address)
+    except ConnectionError as e:
+        if logger:
+            logger.warning('Failed to connect to: {}', address)
+        return True
+
     if not device.HasEmeter():
         if logger:
             logger.warning("Device '{}' does not support electronic metering",
