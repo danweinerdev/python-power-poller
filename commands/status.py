@@ -5,7 +5,7 @@ from tplink.utils import IsValidIPv4
 
 def PrettyDuration(seconds, values=2):
     table = [('Weeks', 604800), ('Days', 86400), ('Hours', 3600),
-             ('Minutes', 60), ('Seconds', 0)]
+             ('Minutes', 60), ('Seconds', 1)]
     if seconds <= 0:
         return 'N/A'
     results = []
