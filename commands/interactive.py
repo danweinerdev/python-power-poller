@@ -1,3 +1,5 @@
+from tplink.discover import LoadDevices
+
 commands = {
     'toggle': 'Disable the devices',
     'help': 'Display this help menu',
@@ -14,10 +16,12 @@ def IsNumber(value):
     return True
 
 
-def Interactive(devices, args):
+def Interactive(config, args):
     target = None
+    devices = LoadDevices(args.devices)
     if len(devices) == 1:
         target = devices[0]
+
     while True:
         try:
             if target is not None:
@@ -27,7 +31,7 @@ def Interactive(devices, args):
             if command is None or len(command) == 0:
                 continue
 
-            args =command.split(' ')
+            args = command.split(' ')
             command = args.pop(0).lower()
             if command == 'q' or command == 'quit':
                 break
@@ -38,13 +42,22 @@ def Interactive(devices, args):
             elif command == 'l' or command == 'list':
                 print('Available devices:\n')
                 for i in range(len(devices)):
-                    print('{}) {}'.format(i + 1, devices[i].GetAlias()))
+                    print('{}) {} ({})'.format(i + 1, devices[i].GetAlias(), devices[i].address))
+            elif command == 'reboot':
+                for i in range(len(devices)):
+                    print("Rebooting device '{}' ...".format(devices[i].GetAlias()))
+                    result = devices[i].Set('system', 'reboot', {'delay': 1})
+                    print("device='{}' result={}".format(devices[i].GetAlias(), result))
             elif command == 'toggle':
                 for i in range(len(devices)):
                     if devices[i].IsOn():
                         devices[i].Off()
+                        print("Changing active state for '{}' to 'Off'".format(
+                            devices[i].GetAlias()))
                     elif devices[i].IsOff():
                         devices[i].On()
+                        print("Changing active state for '{}' to 'On'".format(
+                            devices[i].GetAlias()))
             elif command == 'use':
                 if len(args) == 0:
                     if target is not None:

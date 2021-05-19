@@ -38,8 +38,8 @@ def Setup(args):
     """
     ConfigureParams(args.Register('status', Status,
         help='Status command for polling the state of the configured devices'))
-    # ConfigureParams(args.Register('interactive', Interactive,
-    #    help='Run the interactive mode for the CLI tool.'))
+    ConfigureParams(args.Register('interactive', Interactive,
+        help='Run the interactive mode for the CLI tool.'))
 
 
 if __name__ == '__main__':
