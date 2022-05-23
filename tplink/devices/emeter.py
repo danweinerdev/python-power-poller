@@ -22,8 +22,6 @@ class EmeterHandler(object):
             raise DeviceError('Failed to get realtime emeter stats')
         if 'current' in value:
             return float(value['current'])
-        if 'current_ma' in value:
-            return float(value['current_ma']) / 1000.0
         return 0
 
     def GetConsumption(self):
@@ -35,8 +33,6 @@ class EmeterHandler(object):
             raise DeviceError('Failed to get realtime emeter stats')
         if 'power' in value:
             return float(value['power'])
-        elif 'power_mw' in value:
-            return float(value['power_mw']) / 1000.0
         raise DeviceError('Unknown output from emeter realtime')
 
     def GetDailyAverage(self):
@@ -94,6 +90,7 @@ class EmeterHandler(object):
             data = self.__cache.Get(self.emeterType)
         if data is None:
             data = self.Send(self.QueryHelper(self.emeterType, 'get_realtime'))
+        data = self.ProcessRealtimeData(data)
         if data is not None:
             self.__cache.Insert(self.emeterType, data)
         if key is not None:
@@ -133,9 +130,21 @@ class EmeterHandler(object):
             raise DeviceError('Failed to get realtime emeter stats')
         if 'voltage' in value:
             return float(value['voltage'])
-        if 'voltage_mv' in value:
-            return float(value['voltage_mv']) / 1000.0
         return 0
+
+    @staticmethod
+    def ProcessRealtimeData(data):
+        if 'emeter' not in data:
+            return data
+        d = dict()
+        emeter = data['emeter']['get_realtime']
+        for key, value in emeter.items():
+            suffix = key[-3:]
+            if suffix in ['_ma', '_mv', '_mw']:
+                d[key[:-3]] = float(value) / 1000.0
+            else:
+                d[key] = value
+        return {'emeter': {'get_realtime': d}}
 
     def QueryHelper(self, *args):
         return self.device.QueryHelper(*args)
