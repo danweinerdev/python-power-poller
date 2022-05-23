@@ -22,6 +22,8 @@ class EmeterHandler(object):
             raise DeviceError('Failed to get realtime emeter stats')
         if 'current' in value:
             return float(value['current'])
+        if 'current_ma' in value:
+            return float(value['current_ma']) / 1000.0
         return 0
 
     def GetConsumption(self):
@@ -34,7 +36,7 @@ class EmeterHandler(object):
         if 'power' in value:
             return float(value['power'])
         elif 'power_mw' in value:
-            return float(value['power_mw'])
+            return float(value['power_mw']) / 1000.0
         raise DeviceError('Unknown output from emeter realtime')
 
     def GetDailyAverage(self):
@@ -131,6 +133,8 @@ class EmeterHandler(object):
             raise DeviceError('Failed to get realtime emeter stats')
         if 'voltage' in value:
             return float(value['voltage'])
+        if 'voltage_mv' in value:
+            return float(value['voltage_mv']) / 1000.0
         return 0
 
     def QueryHelper(self, *args):
