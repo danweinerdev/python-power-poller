@@ -48,6 +48,8 @@ pipeline {
                 script {
                     sh """
                     docker build \
+                        --force-rm \
+                        --no-cache \
                         --network=host \
                         -f Dockerfile \
                         -t ${params.DOCKER_REGISTRY}/${params.DOCKER_NAMESPACE}/${params.DOCKER_CONTAINER}:${GIT_SHORT_COMMIT} \
