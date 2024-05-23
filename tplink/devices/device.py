@@ -204,7 +204,7 @@ class Device(object):
                     break
         except OSError as e:
             if self.logger:
-                self.logger.exception('Error connecting to: {} ({})', self.address, e)
+                self.logger.exception('Error connecting to: {} ({})'.format(self.address, e))
             raise ConnectionError(e.errno,
                 "Error connecting to '{}' ({}): [{}] {}".format(
                     self.GetType(), self.address, e.errno,
@@ -222,8 +222,8 @@ class Device(object):
         result = self.Send(self.QueryHelper(category, option, value))
         if result is None or len(result) == 0:
             if self.logger:
-                self.logger.error("Error: unable to set '{}::{}': invalid response from device",
-                                  category, option)
+                self.logger.error("Error: unable to set '{}::{}': invalid response from device".format(
+                    category, option))
             return False
         if category not in result:
             if self.logger:

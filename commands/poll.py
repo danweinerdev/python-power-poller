@@ -8,20 +8,20 @@ def ProcessDevice(pipeline, name, config, logger=None):
     address = config['address']
     if not IsValidIPv4(address):
         if logger:
-            logger.error('Invalid device configuration: {}', name)
+            logger.error('Invalid device configuration: {}'.format(name))
         return False
 
     try:
         device = LoadDevice(address, logger=logger)
     except ConnectionError as e:
         if logger:
-            logger.warning('Failed to connect to: {}', address)
+            logger.warning('Failed to connect to: {}'.format(address))
         return True
 
     if not device.HasEmeter():
         if logger:
-            logger.warning("Device '{}' does not support electronic metering",
-                device.GetAlias())
+            logger.warning("Device '{}' does not support electronic metering".format(
+                device.GetAlias()))
         return False
 
     emeter = device.GetEmeter()
@@ -29,13 +29,12 @@ def ProcessDevice(pipeline, name, config, logger=None):
         result = emeter.GetRealtime(cache=False)
     except ConnectionError:
         if logger:
-            logger.warning('Failed to get realtime data for: {}', address)
+            logger.warning('Failed to get realtime data for: {}'.format(address))
         return True
 
     if 'err_code' not in result or result['err_code'] != 0:
         if logger:
-            logger.error("Failed to load device '{}' emeter data",
-                device.GetAlias())
+            logger.error("Failed to load device '{}' emeter data".format(device.GetAlias()))
         return False
 
     tags = {'device': config['device']}

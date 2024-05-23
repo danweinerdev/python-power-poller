@@ -42,7 +42,7 @@ def LoadDevices(addresses, logger=None):
         device = LoadDevice(address, logger=logger)
         if not device:
             if logger:
-                logger.error('Error: Unable to determine device type for: {}', address)
+                logger.error('Error: Unable to determine device type for: {}'.format(address))
             continue
         devices.append(device)
 
