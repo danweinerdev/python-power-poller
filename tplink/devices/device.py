@@ -3,6 +3,7 @@ import os
 import socket
 import struct
 import sys
+from monitor.lib.utils import GetErrorMessage
 from .emeter import EmeterHandler
 from ..exceptions import ConnectionError, DeviceError, InputError
 from ..utils import Cache, IsValidMacAddress
@@ -21,13 +22,14 @@ class Device(object):
     ENCRYPTION_KEY = 0xAB
 
     def __init__(self, address=None, type=DeviceType.NONE, info=None, key=None,
-            port=DEFAULT_PORT):
+            port=DEFAULT_PORT, logger=None):
         self.address = address
         self.port = int(port)
         self.key = key or self.ENCRYPTION_KEY
         self.type = type or DeviceType.NONE
         self.emeter = None
         self.cache = Cache()
+        self.logger = logger
 
     @staticmethod
     def Decrypt(message, key):
@@ -201,10 +203,12 @@ class Device(object):
                 if (length > 0 and len(buffer) >= length + 4) or not chunk:
                     break
         except OSError as e:
+            if self.logger:
+                self.logger.exception('Error connecting to: {} ({})', self.address, e)
             raise ConnectionError(e.errno,
                 "Error connecting to '{}' ({}): [{}] {}".format(
                     self.GetType(), self.address, e.errno,
-                    os.strerror(e.errno) if e.errno else 'None'))
+                    GetErrorMessage(e.errno) if e.errno else 'None'))
         finally:
             try:
                 sock.close()
@@ -217,14 +221,17 @@ class Device(object):
     def Set(self, category, option, value):
         result = self.Send(self.QueryHelper(category, option, value))
         if result is None or len(result) == 0:
-            print("Error: unable to set '{}::{}': invalid response from device"\
-                .format(category, option))
+            if self.logger:
+                self.logger.error("Error: unable to set '{}::{}': invalid response from device",
+                                  category, option)
             return False
         if category not in result:
-            print('Error: invalid response from device')
+            if self.logger:
+                self.logger.error('Error: invalid response from device')
             return False
         if option not in result[category]:
-            print('Error: invalid response from device')
+            if self.logger:
+                self.logger.error('Error: invalid response from device')
             return False
         response = result[category][option]
         if 'err_code' not in response or response['err_code'] != 0:

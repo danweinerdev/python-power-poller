@@ -19,5 +19,7 @@ RUN set -ex; \
 USER monitor
 WORKDIR /srv
 
+ENV PYTHONUNBUFFERED=1
+
 ENTRYPOINT ["python3", "/srv/cli.py"]
 CMD ["run", "-o", "--loglevel=INFO", "/etc/monitor.conf"]

@@ -12,7 +12,7 @@ def ProcessDevice(pipeline, name, config, logger=None):
         return False
 
     try:
-        device = LoadDevice(address)
+        device = LoadDevice(address, logger=logger)
     except ConnectionError as e:
         if logger:
             logger.warning('Failed to connect to: {}', address)

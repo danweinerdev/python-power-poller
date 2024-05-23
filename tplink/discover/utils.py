@@ -24,8 +24,8 @@ def GetDeviceType(info):
     return None
 
 
-def LoadDevice(address):
-    device = Device(address)
+def LoadDevice(address, logger=None):
+    device = Device(address, logger=logger)
     info = device.GetInfo()
     if info is not None:
         DeviceType = GetDeviceType(info)
@@ -34,14 +34,15 @@ def LoadDevice(address):
     return None
 
 
-def LoadDevices(addresses):
+def LoadDevices(addresses, logger=None):
     devices = []
     if not addresses or len(addresses) == 0:
         return []
     for address in addresses:
-        device = LoadDevice(address)
+        device = LoadDevice(address, logger=logger)
         if not device:
-            print('Error: Unable to determine device type for: {}'.format(address))
+            if logger:
+                logger.error('Error: Unable to determine device type for: {}', address)
             continue
         devices.append(device)
 
