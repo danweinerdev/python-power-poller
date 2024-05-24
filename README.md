@@ -12,17 +12,12 @@ The library was designed for another tool I built which sends data to InfluxDB f
 
 ## Docker Container
 
-The Docker container is available from:
-```text
-aprelius/tplink:latest
-```
-
-It can be run stand-alone or as any base necessary. Make sure to generate a config file and pass it in as a volume mount.
+The Docker container can be run stand-alone or as any base necessary. Make sure to generate a config file and pass it in as a volume mount.
 
 ```shell
 docker run -it \
     -v $PWD/config/example.conf:/etc/monitor.conf:ro \
-    aprelius/tplink:latest
+    power-monitor-poller:latest
 ```
 
 The container entrypoint's to the cli, so you can run any of the commands from there. If you would like to explore the container or change the entrypoint, you can do the following:
@@ -31,5 +26,5 @@ The container entrypoint's to the cli, so you can run any of the commands from t
 docker run -it \
     --entrypoint sh \
     -v $PWD/config/example.conf:/etc/monitor.conf:ro \
-    aprelius/tplink:latest
+    power-monitor-poller:latest
 ```
