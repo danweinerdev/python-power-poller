@@ -57,8 +57,19 @@ def ProcessDevice(pipeline, name, config, logger=None):
 
 
 def Poll(config, logger, pipeline):
+    """
+
+    :param config:
+    :param logger:
+    :param pipeline:
+    :return:
+    """
     success = True
     for device, cfg in config.items():
-        if not ProcessDevice(pipeline, device, cfg, logger=logger):
-            success = False
+        try:
+            ProcessDevice(pipeline, device, cfg, logger=logger)
+        except ConnectionError as e:
+            if logger:
+                logger.error("Failed to connect to '{}': {}".format(device, e.message))
+
     return Result.SUCCESS if success else Result.FAILURE

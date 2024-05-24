@@ -1,22 +1,18 @@
 import os
+from monitor.lib.utils import GetErrorMessage
 
 
 class DeviceError(Exception):
-    message = 'Whoops! Something went wrong'
-
     def __init__(self, message=None, *args):
-        self.message = message or self.message
+        self.message = message or 'Whoops! Something went wrong'
         self.message = self.message.format(*args)
 
 
 class ConnectionError(DeviceError):
-    err = -1
-    errstr = None
-    message = 'Failed to connect to target device'
 
     def __init__(self, err, *args, **kwargs):
         self.err = err or -1
-        self.errstr = os.strerror(err) if err else ''
+        self.errstr = GetErrorMessage(err) if err else ''
         super(ConnectionError, self).__init__(*args, **kwargs)
 
 
