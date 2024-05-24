@@ -41,9 +41,10 @@ def ProcessDevice(pipeline, name, config, logger=None):
     tags.update(config.get('tags', {}))
 
     metric = Metric(name, 'emeter', tags=tags)
+    measurements = config['measurements'][metric.measurement]
 
     for key, value in result.items():
-        if key not in config['fields']:
+        if key not in measurements:
             continue
         metric.AddField(key, value)
 
