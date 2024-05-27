@@ -1,3 +1,4 @@
 # Exclude the python compiled files
 **/*.pyc
 **/__pycache__
+**/.venv
