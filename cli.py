@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 
+from os.path import dirname, exists, join, realpath
 import os
 import sys
 
-pkgPath = os.path.realpath(os.path.join(__file__, os.pardir, os.pardir))
-if os.path.exists(os.path.join(pkgPath, 'monitor-lib')):
-    sys.path.insert(0, os.path.join(pkgPath, 'monitor-lib'))
 
-rootPath = os.path.realpath(os.path.join(__file__, os.pardir))
-if os.path.exists(os.path.join(rootPath, 'commands')):
+rootPath = realpath(join(__file__, os.pardir))
+parentPath = dirname(rootPath)
+
+if exists(join(parentPath, 'PyMonitorLib')):
+    sys.path.insert(0, join(parentPath, 'PyMonitorLib'))
+
+if exists(join(rootPath, 'commands')):
     sys.path.insert(0, rootPath)
 
 from commands import Interactive, Poll, Status

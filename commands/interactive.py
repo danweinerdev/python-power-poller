@@ -88,7 +88,7 @@ def Interactive(config, args):
                     if option == 'alias':
                         result = target.SetAlias(value)
                     else:
-                        print("Error: invalid set-option '{}'".fomrat(option))
+                        print("Error: invalid set-option '{}'".format(option))
                         continue
                     if result:
                         print('Success')

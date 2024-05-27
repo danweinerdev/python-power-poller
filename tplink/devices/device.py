@@ -12,6 +12,7 @@ class DeviceType(object):
     NONE = 0
     BULB = 1
     PLUG = 2
+    LIGHTSTRIP = 3
 
 
 class Device(object):
@@ -19,7 +20,7 @@ class Device(object):
     DEFAULT_PORT = 9999
     ENCRYPTION_KEY = 0xAB
 
-    def __init__(self, address, type=DeviceType.NONE, info=None, key=None,
+    def __init__(self, address=None, type=DeviceType.NONE, info=None, key=None,
             port=DEFAULT_PORT):
         self.address = address
         self.port = int(port)
@@ -103,8 +104,11 @@ class Device(object):
             return str(value)
         value = self.GetSysInfo('mic_mac')
         if value is not None:
-            return ':'.join(format(s, '02x')
-                for s in bytes.fromhex(value))
+            if isinstance(value, str):
+                return value
+            else:
+                return ':'.join(format(s, '02x')
+                                for s in bytes.fromhex(value))
         return None
 
     def GetManufacturerIdentifier(self):
@@ -128,10 +132,13 @@ class Device(object):
         return self.GetInfo('system')['get_sysinfo']
 
     def GetType(self):
-        if self.type == DeviceType.BULB:
-            return 'Bulb'
-        elif self.type == DeviceType.PLUG:
-            return 'Plug'
+        match self.type:
+            case DeviceType.BULB:
+                return 'Bulb'
+            case DeviceType.LIGHTSTRIP:
+                return 'Light Strip'
+            case DeviceType.PLUG:
+                return 'Plug'
         return 'Unknown'
 
     def GetTypeString(self):

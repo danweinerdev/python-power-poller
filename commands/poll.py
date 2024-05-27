@@ -38,15 +38,20 @@ def ProcessDevice(pipeline, name, config, logger=None):
                 device.GetAlias())
         return False
 
+    tags = {'device': config['device']}
+    tags.update(config.get('tags', {}))
+
+    metric = Metric(name, 'emeter', tags=tags)
+
     for key, value in result.items():
         if key not in config['fields']:
             continue
-        try:
-            pipeline(Metric(name, key, value))
-        except ConversionFailure:
-            if logger:
-                logger.error("Failed to convert value '{}' for metric '{}'"
-                    .format(value.strip(), key))
+        metric.AddField(key, value)
+
+    try:
+        pipeline(metric)
+    except ConversionFailure:
+        pass
 
     return True
 
