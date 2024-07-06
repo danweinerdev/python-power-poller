@@ -1,4 +1,4 @@
-certifi==2024.2.2
+certifi==2024.7.4
 influxdb-client==1.42.0
 git+https://github.com/Aralocke/PyMonitorLib
 python-dateutil==2.9.0.post0
