@@ -3,7 +3,7 @@ influxdb-client==1.42.0
 git+https://github.com/Aralocke/PyMonitorLib
 python-dateutil==2.9.0.post0
 reactivex==4.0.4
-setuptools==69.5.1
+setuptools==70.0.0
 six==1.16.0
 typing_extensions==4.11.0
 urllib3==2.2.2
