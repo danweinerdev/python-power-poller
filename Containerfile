@@ -11,7 +11,7 @@ RUN set -ex; \
     python3 -m pip install -r /srv/requirements.txt; \
     adduser --home=/srv --shell=/bin/false \
         --disabled-password --no-create-home monitor; \
-    chmod 640 -R /srv/**.py; \
+    chmod 640 -R /srv/**.py /srv/*.txt; \
     chown monitor:monitor -R /srv/commands /srv/tplink /srv/cli.py; \
     \
     rm -rf /var/cache/apk/*;
